@@ -12,6 +12,10 @@
     transform: translate(-50%, -50%); /* Смещаем на 50% */
 }
 
+.form-container h2 {
+    text-align: center;
+}
+
 /* Стили для групп элементов ввода */
 .input-group {
     margin-bottom: 20px;
@@ -51,6 +55,7 @@
     width: 100%;
     cursor: pointer;
     transition: background-color 0.3s;
+    margin-bottom: 20px;
 }
 
 .submit-btn:hover {
