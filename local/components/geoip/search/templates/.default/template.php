@@ -20,10 +20,10 @@ $this->setFrameMode(true);
     <h2>GeoIp - Search</h2>
     <form method="POST" id="geoip-form">
         <div class="input-group">
-            <label for="name">Enter IP</label>
+            <label for="name">Введите IP адрес</label>
             <input type="text" id="ip" name="GEOIP" placeholder="8.8.8.8">
         </div>
-        <button type="submit" class="submit-btn">Submit</button>
+        <button type="submit" class="submit-btn">Получить данные</button>
     </form>
 
     <div id="geoip-result"></div>
