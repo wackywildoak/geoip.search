@@ -1,0 +1,58 @@
+/* Контейнер формы */
+.form-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    position: absolute; /* Позиционируем относительно окна */
+    top: 50%; /* Центрируем по вертикали */
+    left: 50%; /* Центрируем по горизонтали */
+    transform: translate(-50%, -50%); /* Смещаем на 50% */
+}
+
+/* Стили для групп элементов ввода */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.input-group input,
+.input-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+    outline: none;
+}
+
+.input-group input:focus,
+.input-group textarea:focus {
+    border-color: #007bff;
+}
+
+/* Кнопка отправки */
+.submit-btn {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 4px;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
