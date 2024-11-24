@@ -3,9 +3,9 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
 $arComponentParameters = [
     "PARAMETERS" => [
-        "API" => [
+        "HL_BLOCK_NAME" => [
             "PARENT" => "BASE", // Категория параметра
-            "NAME" => "Публичный API для получения данных", // Название параметра
+            "NAME" => "Highload-Блок", // Название параметра
             "TYPE" => "STRING", // Тип (строка)
             "DEFAULT" => "", // Значение по умолчанию
         ],
