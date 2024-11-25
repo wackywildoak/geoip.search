@@ -21,7 +21,7 @@ $this->setFrameMode(true);
     <form method="POST" id="geoip-form">
         <div class="input-group">
             <label for="name">Введите IP адрес</label>
-            <input type="text" id="ip" name="GEOIP" placeholder="8.8.8.8">
+            <input type="text" id="ip" name="ip" placeholder="8.8.8.8">
         </div>
         <button type="submit" class="submit-btn">Получить данные</button>
     </form>

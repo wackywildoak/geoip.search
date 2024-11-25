@@ -56,15 +56,15 @@ $(document).ready(function() {
         var ip = $('#ip').val();
         
         $.ajax({
-            url: componentUrl,
+            url: '/bitrix/services/main/ajax.php?mode=class&c=geoip:search&action=send',
             method: 'POST',
-            data: { GEOIP: ip },
+            data: { ip: ip },
             dataType: 'json',
             success: function(data) {
-                if (!data) {
+                if (!data.data) {
                     $('#geoip-result').html('Данные отсутствуют');
                 } else {
-                    var transformedData = transformData(data);
+                    var transformedData = transformData(JSON.parse(data.data));
                     console.log(data);
                     console.log(transformedData);
                     if (transformedData) {

@@ -5,28 +5,58 @@ use Bitrix\Main\Application;
 use Bitrix\Main\Web\HttpClient;
 use Bitrix\Highloadblock\HighloadBlockTable as HLBT;
 use Bitrix\Main\Entity;
-use \Bitrix\Main\Request;
+use Bitrix\Main\Error;
+use Bitrix\Main\Errorable;
+use Bitrix\Main\ErrorCollection;
+use Bitrix\Main\Engine\ActionFilter;
+use Bitrix\Main\Engine\Contract\Controllerable;
 Loader::includeModule("highloadblock"); 
 
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
-class GeoIpSearchComponent extends CBitrixComponent
+class GeoIpSearchComponent extends CBitrixComponent implements Controllerable, Errorable
 {
-    
+    protected ErrorCollection $errorCollection;
     private $geoApiUrl = "https://api.sypexgeo.net/json/"; // API к котому производится запрос
 
-    public function executeComponent()
+    public function executeComponent(): void
     {   
         $this->checkModules();
-        // если ajax, возвращаем данные в json
-        if ($this->isAjaxRequest()) 
-            $this->handleAjaxRequest();
-        else
-            $this->includeComponentTemplate();
+        $this->includeComponentTemplate();
+    }
+    
+    // обработка параметров
+    public function onPrepareComponentParams($arParams): array
+    {   
+        $this->errorCollection = new ErrorCollection();
+
+        $arParams['HL_BLOCK_NAME'] = isset($arParams['HL_BLOCK_NAME']) ? $arParams['HL_BLOCK_NAME'] : 'SearchGeoIP';
+        
+        return $arParams;
+    }
+
+    public function getErrors(): array
+    {
+        return $this->errorCollection->toArray();
+    }
+
+    public function getErrorByCode($code): Error
+    {
+        return $this->errorCollection->getErrorByCode($code);
+    }
+
+    public function configureActions(): array
+    {
+        return [
+            'send' => [
+                'prefilters' => [
+                ]
+            ]
+        ];
     }
 
     // метод на проверку модулей
-    protected function checkModules()
+    protected function checkModules(): void
     {
         if (!Loader::includeModule('highloadblock')) 
         {
@@ -34,48 +64,33 @@ class GeoIpSearchComponent extends CBitrixComponent
         }
     }
 
-    // обработка параметров
-    public function onPrepareComponentParams($arParams)
-    {
-        $arParams['HL_BLOCK_NAME'] = isset($arParams['HL_BLOCK_NAME']) ? $arParams['HL_BLOCK_NAME'] : 'SearchGeoIP';
-        
-        return $arParams;
-    }
-
-    // метод проверки на ajax запрос
-    protected function isAjaxRequest() 
-    {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    }
-
-    // метод обработки ajax запроса
-    private function handleAjaxRequest()
-    {
-        global $APPLICATION;
-
-        $ip = $_POST['GEOIP'] ?? null;
-        // валидация ip
+    public function sendAction(string $ip = ''): array|bool|string
+    {   
         if (!filter_var($ip, FILTER_VALIDATE_IP)) 
-            return;
+            return false;
 
-        $data = $this->existInHighloadBlock($ip); // получаем данные из hl
-        
-        // если данных нет, делаем запрос к API и сохраняем их в HL
-        if (!$data) 
-        {
-            $data = $this->fetchApiData($ip);
-            $this->saveToHighloadBlock($data);
+        try {
+            $data = $this->existInHighloadBlock($ip);
+
+            if (!$data) 
+            {
+                $data = $this->fetchApiData($ip);
+                $this->saveToHighloadBlock($data);
+            }
+
+            AddMessage2Log($data);
+            return json_encode($data);
+
+        } catch (Exceptions\EmptyEmail $e) {
+            $this->errorCollection[] = new Error($e->getMessage());
+            return [
+                "result" => "Произошла ошибка",
+            ];
         }
-
-        $APPLICATION->RestartBuffer();
-
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        die;
     }
 
     // метод запроса к API
-    protected function fetchApiData($ip) 
+    protected function fetchApiData(string $ip = ''): mixed
     {
         $httpClient = new HttpClient();
         $url = $this->geoApiUrl.$ip;
@@ -94,7 +109,7 @@ class GeoIpSearchComponent extends CBitrixComponent
     }
 
     // создание сущности HL
-    protected function getHighloadBlockEntity()
+    protected function getHighloadBlockEntity(): bool|DataManager|string
     {
         $hlBlock = HLBT::getList(['filter' => ['=NAME' => $this->arParams['HL_BLOCK_NAME']]])->fetch();
         if (!$hlBlock) 
@@ -105,10 +120,10 @@ class GeoIpSearchComponent extends CBitrixComponent
     }
 
     // проверка и получение данных из HL
-    protected function existInHighloadBlock($ip) 
+    protected function existInHighloadBlock(string $ip = ''): mixed
     {
         if (!$hlBlock = $this->getHighloadBlockEntity())
-            return;
+            return false;
 
         $result = $hlBlock::getList([
             'filter' => ['UF_IP' => $ip],
@@ -123,10 +138,10 @@ class GeoIpSearchComponent extends CBitrixComponent
     }
 
     // сохранение данных в HL
-    protected function saveToHighloadBlock($data) 
+    protected function saveToHighloadBlock(array $data): bool
     {
         if (!$hlBlock = $this->getHighloadBlockEntity())
-            return;
+            return false;
 
         $result = $hlBlock::add([
             'UF_IP' => $data['ip'],
